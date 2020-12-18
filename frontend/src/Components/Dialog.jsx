@@ -15,7 +15,6 @@ import Typography from '@material-ui/core/Typography';
 import { blue } from '@material-ui/core/colors';
 import { useContext } from 'react';
 import { Context } from './JoinRoomContainer'
-import { TextField } from '@material-ui/core';
 
 
 const useStyles = makeStyles({
@@ -59,11 +58,10 @@ function SimpleDialog() {
 }
 
 export default function SimpleDialogDemo() {
-  const {handleOpenDialog, dialogValue} = useContext(Context)
-
+  const {handleOpenDialog, roomName} = useContext(Context)
   return <>
       <Button variant="outlined" color="primary" onClick={handleOpenDialog}>Выбрать чат комнату</Button>
-      <Typography variant="subtitle1">{dialogValue}</Typography>
+      <Typography variant="subtitle1">{roomName}</Typography>
       <SimpleDialog />
       <AddModal />
     </>

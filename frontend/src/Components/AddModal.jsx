@@ -38,7 +38,7 @@ export default function TransitionsModal() {
         <Fade in={openModal}>
           <div className={classes.paper}>
             <Grid container direction = 'column'>
-              <TextField autoFocus label = 'Введите название чата' value = {changeRoomInput} onChange = {changeHandle}></TextField>
+              <TextField autoFocus label = 'Введите название чата' name = 'roomInput' value = {changeRoomInput} onChange = {changeHandle}></TextField>
               <Grid>
                 <Button onClick = {handleCreateRoom}>Создать</Button>
                 <Button onClick = {handleCloseModal}>Отменить</Button>

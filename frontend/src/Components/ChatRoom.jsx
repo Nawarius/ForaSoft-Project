@@ -3,15 +3,20 @@ import PersonIcon from '@material-ui/icons/Person';
 import React from 'react'
 import { NavLink } from 'react-router-dom';
 
-const CharRoomContainer = ({roomName, handleUserMessage, users, changeHandle, allMessages}) => {
+const CharRoomContainer = ({roomName, handleUserMessage, users, changeHandle, callAccepted, receivedCall, caller, acceptCall,
+     allMessages, socketRef, userVideoRef, partnerVideofRef, stream, callUser}) => {
+
     
     const allUsers = users.map(item => {
         return <Grid container direction = 'row' alignItems = 'center' >
                     <PersonIcon />
                     <Typography style ={{margin:'10px'}}>{item.name}</Typography>
+                    {socketRef.current.id !== item.id && <button onClick = {()=>{callUser(item.id)}}>Позвонить</button>}
                 </Grid>
     })
-
+    const callerMan = users.map(user=>{
+        if(user.id==caller) return user.name
+    })
     const messages = allMessages.map(item => {
         return <Grid container direction = 'column' alignItems = 'left' style ={{border:'1px solid blue', width:'100%', height:'15%'}}>
                 <Typography>{item.date}</Typography>
@@ -21,6 +26,14 @@ const CharRoomContainer = ({roomName, handleUserMessage, users, changeHandle, al
     })
     
     return <> 
+        {stream && <video autoPlay ref = {userVideoRef} style = {{border:'2px solid red'}}></video>}
+        {callAccepted &&  <video autoPlay ref = {partnerVideofRef} style = {{border:'2px solid red'}}></video>}
+
+        {receivedCall && <Grid>
+            <Typography>Вам звонит {callerMan}</Typography>
+            <Button color = 'primary' variant = 'contained' onClick = {acceptCall}>Ответить</Button>
+        </Grid>
+        }
         <Grid container justify = 'center' alignItems = 'center' style = {{width:'100%', height:'100%'}}>
             <Grid container direction = 'row' style = {{width:'60%', height:'60%', border:'1px solid red'}}>
                 <Grid container direction = 'column' style ={{ width:'20%', height:'90%'}}>

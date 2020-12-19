@@ -32,6 +32,8 @@ io.on('connection', socket => {
     })
 
     socket.on('join room', (roomName) => {
+        currentSocketRoom = roomName
+
         const roomHasExist = rooms.find(room => room.roomName === roomName)
         if(!roomHasExist){
             rooms.push({roomName, users:[], messages:[]})
@@ -40,19 +42,24 @@ io.on('connection', socket => {
         }
             socket.join(roomName)
             user = users.find(user => user.id === socket.id)
+
             const indexOfRoom = rooms.findIndex(room => room.roomName === roomName)
-            rooms[indexOfRoom].users.push(user)
+            const userInRoom = rooms.find(room=>room.users.find(user => user.id == socket.id))
+
+            if(!userInRoom){
+                console.log('Here')
+                rooms[indexOfRoom].users.push(user)
+            }
+            
             io.to(roomName).emit('joined', rooms[indexOfRoom].users)
             if(rooms[indexOfRoom].messages){
                 io.to(roomName).emit('message', rooms[indexOfRoom].messages)
             }
-            
-            socket.rooms.forEach((item, index) => {if(index!=0) currentSocketRoom = item})
     })
 
     socket.on('message', (message, roomName) => {
         const sender = users.find(user => user.id === socket.id)
-        console.log(sender)
+        
         const payload = {
             message,
             sender: sender.name,
@@ -61,7 +68,7 @@ io.on('connection', socket => {
         const indexOfRoom = rooms.findIndex(room => room.roomName === roomName)
         rooms[indexOfRoom].messages.push(payload)
 
-        io.to(roomName).emit('message', rooms[indexOfRoom].messages)
+        io.to(roomName).emit('message', rooms[indexOfRoom].messages, roomName)
     })
     socket.on('leave', (roomName) => {
         socket.leave(roomName)
@@ -78,14 +85,24 @@ io.on('connection', socket => {
         users = users.filter(user => user.id !== socket.id)
         io.emit('new user', users)
 
-        console.log(currentSocketRoom)
+        //console.log(currentSocketRoom)
 
-        const indexOfRoom = rooms.findIndex(room => room.roomName === currentSocketRoom)
-        console.log(indexOfRoom)
-        console.log(rooms)
-        rooms[indexOfRoom].users = rooms[indexOfRoom].users.filter(user => user.id !== socket.id)
-        io.to(currentSocketRoom).emit('joined', rooms[indexOfRoom].users)
-    
+        if(currentSocketRoom){
+            const indexOfRoom = rooms.findIndex(room => room.roomName === currentSocketRoom)
+            // console.log(indexOfRoom)
+            // console.log(rooms)
+            rooms[indexOfRoom].users = rooms[indexOfRoom].users.filter(user => user.id !== socket.id)
+            io.to(currentSocketRoom).emit('joined', rooms[indexOfRoom].users)
+        }
+    })
+
+    // WEBRTC
+    socket.on("callUser", (data) => {
+        io.to(data.userToCall).emit('hey', {signal: data.signalData, from: data.from});
+    })
+
+    socket.on("acceptCall", (data) => {
+        io.to(data.to).emit('callAccepted', data.signal);
     })
 
 })

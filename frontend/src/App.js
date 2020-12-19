@@ -29,7 +29,7 @@ function App() {
       <Route exact path = '/'> <JoinRoomContainer setName = {setName} setRoomName = {setRoomName} 
       roomName = {roomName} name = {name} rooms = {rooms} setMoreRooms = {setMoreRooms} />
       </Route>
-      <Route path = {'/room/' + roomName}> <ChatRoomContainer name = {name} roomName = {roomName} socketRef = {socketRef}/> </Route>
+      <Route path = {'/room/' + roomName}> <ChatRoomContainer name = {name} roomName = {roomName} socketRef = {socketRef} setRoomName = {setRoomName}/> </Route>
     </Switch>
   </BrowserRouter>
   </>

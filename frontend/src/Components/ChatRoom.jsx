@@ -1,7 +1,9 @@
-import { Button, Grid, TextField, Typography, Paper, CardMedia, Card } from '@material-ui/core'
+import { Button, Grid, TextField, Typography, Paper, CardMedia, Card, Hidden, IconButton } from '@material-ui/core'
 import PersonIcon from '@material-ui/icons/Person';
 import React from 'react'
 import { NavLink } from 'react-router-dom';
+import SendIcon from '@material-ui/icons/Send';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 
 const CharRoomContainer = ({roomName, handleUserMessage, users, changeHandle, callAccepted, receivedCall, caller, acceptCall, handleLeave,
     handleOpenInvite , allMessages, socketRef, userVideoRef, partnerVideofRef, stream, callUser, callGoing}) => {
@@ -10,7 +12,7 @@ const CharRoomContainer = ({roomName, handleUserMessage, users, changeHandle, ca
     const allUsers = users.map(item => {
         return <Grid container>
                     <PersonIcon />
-                    <Typography >{item.name}</Typography>
+                    <Typography noWrap>{item.name}</Typography>
                     {socketRef.current.id !== item.id && 
                         <Grid container>
                             <button onClick = {()=>{callUser(item.id)}}>Позвонить</button>
@@ -24,7 +26,7 @@ const CharRoomContainer = ({roomName, handleUserMessage, users, changeHandle, ca
     })
 
     const messages = allMessages.map(item => {
-        return <Grid container direction = 'column' alignItems = 'left' style ={{width:'100%', height:'30%'}}>
+        return <Grid container direction = 'column' alignItems = 'left' >
                 <Typography>{item.date}</Typography>
                 <Typography>{item.sender}:</Typography>
                 <Typography>{item.message}</Typography>
@@ -41,37 +43,49 @@ const CharRoomContainer = ({roomName, handleUserMessage, users, changeHandle, ca
         </Grid>
         }
 
-        <Grid container justify = 'center' alignItems = 'center' style = {{width:'100%', height:'100%'}}>
-            <Grid container xs = {12} sm = {10} md = {8} lg = {6} style = {{width:'60%', height:'60%'}}>
+        <Grid container xs = {12} sm = {12} justify = 'center' alignItems = 'center' style = {{width:'100%', height:'100%'}}>
+            <Grid container xs = {12} sm = {10} md = {8} lg = {6} style = {{height:'60%'}}>
                 <Paper style = {{width:'100%', height:'100%'}} elevation = {20}>
-                    <Grid container direction = 'column' style = {{width:'100%', height:'100%'}}>
+                    <Grid container direction = 'column' style = {{ height:'100%'}}>
 
-                        <Grid container alignItems = 'center' style ={{ position:'relative', height:'10%'}}>
-                            <CardMedia style = {{height:'100%', width:'15%', marginRight:'10px'}} image = 'https://hh.ru/employer-logo/2398142.png' />
-                            <Typography variant = 'h6'>Chat</Typography>
-                            
-                            <NavLink to = '/' style ={{position:'absolute', right:0, textDecoration:'none', color:'inherit' }}>
-                                <Button variant = 'contained' color = 'primary' onClick = {()=>{handleLeave(roomName)}} >Покинуть чат</Button> 
-                            </NavLink>
+                        <Grid container alignItems = 'center' style ={{ position:'relative', width:'100%',height:'10%'}}>
+                            <Grid item xs = {4} sm = {2} md = {2} lg = {2} style = {{height:'100%', width:'40%'}}>
+                                <CardMedia style = {{height:'100%'}} image = 'https://hh.ru/employer-logo/2398142.png' />
+                            </Grid>
+                            <Hidden only = 'xs'>
+                                <Grid item xs = {3}><Typography variant = 'h6'>Chat</Typography></Grid>
+                            </Hidden>
+                            <Grid item xs = {8} style ={{position:'absolute', right:0, height:'100%' }} >
+                                <NavLink to = '/' style ={{textDecoration:'none', color:'inherit',height:'100%'  }} >
+                                    <IconButton style = {{ height:'100%'}}>
+                                        <ExitToAppIcon onClick = {()=>{handleLeave(roomName)}}/>
+                                    </IconButton>
+                                </NavLink>
+                            </Grid>
                         </Grid>
 
                         <Grid container style = {{width:'100%', height:'80%'}}>
-                            <Grid container direction = 'column' style = {{width:'20%', height:'100%'}}>
-                                <Typography varian = 'h6'> Комната: {roomName}</Typography>
-                                <Typography varian = 'h6'> Пользователи:</Typography>
-                                {allUsers}
-                            </Grid>
-                            <Grid container style = {{width:'80%', height:'100%', overflow:'auto'}} >
-                                {messages} 
-                             </Grid> 
-                         </Grid>  
-
-                              
+                                <Grid container xs = {4} sm = {3} md = {3} wrap = 'nowrap' direction = 'column' style = {{ height:'100%'}}>
+                                        <Typography noWrap varian = 'h6'> Чат: {roomName}</Typography>
+                                        <Typography varian = 'h6'> Люди:</Typography>
+                                        {allUsers}
+                                </Grid>
                             
+                                <Grid xs = {8} sm = {9} md = {9} container style = {{ height:'100%', overflow:'auto'}} >
+                                    {messages} 
+                                </Grid> 
+                             
+                         </Grid>                                     
                         
-                        <Grid container alignItems = 'center' style = {{ width:'100%', height:'10%'}}>
-                            <TextField label = 'Ваше сообщение...' style = {{width:'90%'}} variant = 'outlined' onChange = {changeHandle} autoFocus></TextField>
-                            <Button onClick = {handleUserMessage} variant = 'contained' color = 'primary' style = {{width:'10%', height:'100%'}}>Отправить</Button>
+                        <Grid container alignItems = 'center' style = {{ position:'relative',width:'100%', height:'10%'}}>
+                            <Grid item xs = {9} sm = {10} md = {11} lg = {11} style = {{position:'relative', height:'100%' }}>
+                                <TextField placeholder = 'Ваше сообщение...' onChange = {changeHandle} autoFocus
+                                 style = {{position:'absolute', bottom:0, width:'100%'}}/>
+                            </Grid>
+
+                            <Grid item xs = {3} sm = {2} md = {1} lg = {1} style = {{position:'absolute', right:0}}>
+                                <IconButton onClick = {handleUserMessage} variant = 'contained' color = 'primary' ><SendIcon /></IconButton>
+                            </Grid>
                         </Grid>
 
                     </Grid>

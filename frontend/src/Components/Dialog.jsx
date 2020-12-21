@@ -61,7 +61,7 @@ export default function SimpleDialogDemo() {
   const {handleOpenDialog, roomName} = useContext(Context)
   return <>
       <Button variant="outlined" color="primary" onClick={handleOpenDialog}>Выбрать чат комнату</Button>
-      <Typography variant="subtitle1">{roomName}</Typography>
+      <Typography variant="subtitle1" style = {{textAlign:'center'}}>{roomName}</Typography>
       <SimpleDialog />
       <AddModal />
     </>

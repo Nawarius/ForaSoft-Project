@@ -16,6 +16,7 @@ const CharRoomContainer = ({name, roomName, socketRef, setRoomName, myRoomsHandl
     const [receivedCall, setReceivingCall] = useState(false)
     const [caller, setCaller] = useState()
     const [callerSignal, setCallerSignal] = useState()
+    const [callGoing, setCallGoing] = useState()
 
     const [openInvite, setOpenInvite] = useState(false)
     const [inviter, setInviter] = useState()
@@ -28,19 +29,35 @@ const CharRoomContainer = ({name, roomName, socketRef, setRoomName, myRoomsHandl
     const userVideoRef = useRef()
     const partnerVideofRef = useRef()
 
+    let hasVideo = false
+    let hasAudio = false
+
+  async function getConnectedDevices() {
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    devices.forEach(device => {
+        if (device.kind === 'audioinput') hasAudio = true
+        if (device.kind === 'videoinput') hasVideo = true
+    })
+  }
+
+  async function shareDevices(){
+    getConnectedDevices().then(()=>{
+      navigator.mediaDevices.getUserMedia({ audio:hasAudio, video:hasVideo }).then(stream => {
+        setStream(stream);
+        if (userVideoRef.current) {
+          userVideoRef.current.srcObject = stream;
+        }
+      })
+    })
+  }
+
     useEffect(()=>{
-        console.log(roomName)
-        // if(roomName != location.pathname.split('/')[2]){
-        //     console.log('here')
-        //     setRoomName(location.pathname.split('/')[2])
-        // }
-        //console.log(roomName == location.pathname.split('/')[2])
 
         const roomExist = myRooms.find(item=>item == roomName)
         if(!roomExist) myRoomsHandle(roomName)
 
         setRedirect(false)
-        
+        shareDevices()
 
         socketRef.current.emit('join server', name)
     
@@ -57,9 +74,7 @@ const CharRoomContainer = ({name, roomName, socketRef, setRoomName, myRoomsHandl
                 setAllMessages(payload)
             }
         })
-        // socketRef.current.on('my rooms', rName => {
-        //     setMyRooms(oldRooms => [...oldRooms, rName])
-        // })
+        
         socketRef.current.on('joined', users => {
             setUsersInRoom(users)
         })
@@ -71,25 +86,18 @@ const CharRoomContainer = ({name, roomName, socketRef, setRoomName, myRoomsHandl
             setCallerSignal(data.signal);
         })
 
-        // return (()=>{
-        //     socketRef.current.emit('leave', roomName)
-        // })
+        
         
     },[])
 /////////////////////////////////////////////////////////////////////////
-    const callUser = (id) => {
-        navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
-            setStream(stream)
-            if(userVideoRef.current){
-                userVideoRef.current.srcObject = stream
-            }
-        })
+    const callUser = async (id) => {
+        setCallGoing(true)
         const peer = new Peer({
             initiator:true,
             trickle:false,
             config: {
                 iceServers: [
-                  {
+                {
                     urls: "stun:stun.stunprotocol.org"
                 },
                 {
@@ -104,7 +112,6 @@ const CharRoomContainer = ({name, roomName, socketRef, setRoomName, myRoomsHandl
 
         peer.on("signal", data => {
             //Offer
-            console.log('signal')
             socketRef.current.emit("callUser", { userToCall: id, signalData: data, from: socketRef.current.id })
         })
     
@@ -117,20 +124,11 @@ const CharRoomContainer = ({name, roomName, socketRef, setRoomName, myRoomsHandl
         socketRef.current.on("callAccepted", signal => {
             setCallAccepted(true)
             peer.signal(signal)
-        })
+        })    
     }
 /////////////////////////////////////////////////////////////////////////////
-function acceptCall() {
-    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
-        setStream(stream)
-        if(userVideoRef.current){
-            userVideoRef.current.srcObject = stream
-        }
-        
-    })
-
+    const acceptCall = () => {
     setCallAccepted(true)
-
     const peer = new Peer({
       initiator: false,
       trickle: false,
@@ -180,7 +178,7 @@ function acceptCall() {
      }
     return <>
         {roomName && <ChatRoom roomName = {roomName} handleUserMessage = {handleUserMessage} socketRef = {socketRef} handleLeave = {handleLeave}
-            handleOpenInvite = {handleOpenInvite}
+            handleOpenInvite = {handleOpenInvite} callGoing = {callGoing}
          userVideoRef = {userVideoRef} partnerVideofRef = {partnerVideofRef} stream = {stream} callUser = {callUser} inviteHandle = {inviteHandle}
          callAccepted = {callAccepted} receivedCall = {receivedCall} caller = {caller} acceptCall = {acceptCall}
          users = {usersInRoom} changeHandle = {changeHandle} allMessages = {allMessages} />}

@@ -104,6 +104,9 @@ io.on('connection', socket => {
 
     // WEBRTC
     socket.on("callUser", (data) => {
+        console.log(socket.id)
+        console.log(data.from)
+        console.log(data.userToCall)
         io.to(data.userToCall).emit('hey', {signal: data.signalData, from: data.from});
     })
 

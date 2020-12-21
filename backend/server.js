@@ -44,16 +44,16 @@ io.on('connection', socket => {
             user = users.find(user => user.id === socket.id)
 
             const indexOfRoom = rooms.findIndex(room => room.roomName === roomName)
-            const userInRoom = rooms.find(room=>room.users.find(user => user.id == socket.id))
+            const userInRoom = rooms[indexOfRoom].users.find(user => user.id == socket.id)
 
             if(!userInRoom){
-                console.log('Here')
                 rooms[indexOfRoom].users.push(user)
             }
-            
+            //io.to(socket.id).emit('my rooms', roomName)
+
             io.to(roomName).emit('joined', rooms[indexOfRoom].users)
             if(rooms[indexOfRoom].messages){
-                io.to(roomName).emit('message', rooms[indexOfRoom].messages)
+                io.to(roomName).emit('message', rooms[indexOfRoom].messages.reverse(), roomName)
             }
     })
 
@@ -63,18 +63,24 @@ io.on('connection', socket => {
         const payload = {
             message,
             sender: sender.name,
-            date: new Date().toTimeString()
+            date: new Date().toISOString()
         }
         const indexOfRoom = rooms.findIndex(room => room.roomName === roomName)
         rooms[indexOfRoom].messages.push(payload)
 
-        io.to(roomName).emit('message', rooms[indexOfRoom].messages, roomName)
+        io.to(roomName).emit('message', rooms[indexOfRoom].messages.reverse(), roomName)
+    })
+    socket.on('invite room', (inviterId, targetId, roomName) => {
+        const user = users.find(user=>user.id == inviterId)
+        io.to(targetId).emit('accept invite', roomName, user.name)
+
     })
     socket.on('leave', (roomName) => {
         socket.leave(roomName)
-        users = users.filter(user => user.id !== socket.id)
-        io.emit('new user', users)
+        //users = users.filter(user => user.id !== socket.id)
+        //io.emit('new user', users)
         
+        console.log(roomName)
         const indexOfRoom = rooms.findIndex(room => room.roomName === roomName)
         rooms[indexOfRoom].users = rooms[indexOfRoom].users.filter(user => user.id !== socket.id)
         io.to(roomName).emit('joined', rooms[indexOfRoom].users)

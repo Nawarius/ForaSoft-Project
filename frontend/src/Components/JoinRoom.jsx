@@ -1,17 +1,20 @@
-import React from 'react'
-import {Button, Grid, Paper, TextField, Typography} from '@material-ui/core'
+import React, { useContext } from 'react'
+import {Button, Grid, Paper, TextField} from '@material-ui/core'
 import Dialog from './Dialog'
 import { NavLink } from 'react-router-dom'
+import {Context} from './JoinRoomContainer'
 
 
-const JoinRoom = ({changeHandle, roomName, name}) => {
+
+const JoinRoom = () => {
+    const { roomName, name, handleName } = useContext(Context)
     return <>
             <Grid container alignItems = 'center' justify = 'center' style = {{height:'100%', width:'100%'}}>
                 <Grid container xs = {12} sm = {5} md = {2}>
                     <Paper elevation = {20} style = {{ width:'100%'}}>
                         <Grid container direction = 'column' alignItems = 'center' justify = 'center' spacing = {3}>
                             <Grid item xs = {12} style ={{marginTop:'40px'}}>
-                                <TextField label = 'Ваше имя' name = 'name'  variant = 'outlined' onChange = {changeHandle} value = {name}/>
+                                <TextField label = 'Ваше имя' name = 'name'  variant = 'outlined' onChange = {handleName} value = {name}/>
                             </Grid>
 
                             <Grid item xs = {12} > 

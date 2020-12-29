@@ -1,6 +1,9 @@
 const express = require('express')
 const http = require('http')
 const socketio = require('socket.io')
+const {Chat, ChatRoom} = require('./classes/Chat')
+const {User} = require('./classes/User')
+const {Message} = require ('./classes/Message')
 
 const app = express()
 const server = http.createServer(app)
@@ -10,66 +13,58 @@ const PORT = process.env.PORT || 4000
 
 let currentSocketRoom = null
 let users = []
-let rooms = [
-    {roomName: 'Собеседование', users:[], messages:[]},
-    {roomName: 'JavaScript', users:[], messages:[]}
-]
 
-io.on('connection', socket => {
-    // socket.emit('message', 'Велкам зе чат')
-    // socket.broadcast.emit('message', 'Юзер присоеденился к чату')
+const ForaChat = new Chat()
 
-    const roomsNames = rooms.map(item => item.roomName)
-    io.emit('new room', roomsNames)
+const roomInterview = new ChatRoom('Собеседование')
+const roomJS = new ChatRoom('JavaScript')
 
+ForaChat.addChatRoom(roomInterview)
+ForaChat.addChatRoom(roomJS)
+
+io.on('connection', socket => { 
+
+    const rooms = ForaChat.getChatRooms()
+    io.emit('new room', rooms)
+
+    socket.on('new room', roomName => {
+        ForaChat.addChatRoom(new ChatRoom(roomName))
+        const rooms = ForaChat.getChatRooms()
+        io.emit('new room', rooms)
+    })
+    
     socket.on('join server', username => {
-        const user = {
-            id:socket.id,
-            name:username
-        }
-        users.push(user)
+        ForaChat.addUser(new User(socket.id, username))
+        const users = ForaChat.getUsers()
         io.emit('new user', users)
     })
 
-    socket.on('join room', (roomName) => {
-        currentSocketRoom = roomName
+    socket.on('join room', roomName => {
+        socket.join(roomName)
 
-        const roomHasExist = rooms.find(room => room.roomName === roomName)
-        if(!roomHasExist){
-            rooms.push({roomName, users:[], messages:[]})
-            const roomsNames = rooms.map(item => item.roomName)
-            io.emit('new room', roomsNames)
+        const currentRoom = ForaChat.getChatRoomByName(roomName)
+        const currentUser = ForaChat.getUserById(socket.id)
+        
+        currentRoom.addUserInRoom(currentUser)
+
+        io.to(roomName).emit('joined', currentRoom.getUsersInRoom())
+
+        if(currentRoom.getMessagesInRoom()){
+            io.to(roomName).emit('message', currentRoom.getMessagesInRoom().reverse(), roomName)
         }
-            socket.join(roomName)
-            user = users.find(user => user.id === socket.id)
-
-            const indexOfRoom = rooms.findIndex(room => room.roomName === roomName)
-            const userInRoom = rooms[indexOfRoom].users.find(user => user.id == socket.id)
-
-            if(!userInRoom){
-                rooms[indexOfRoom].users.push(user)
-            }
-            //io.to(socket.id).emit('my rooms', roomName)
-
-            io.to(roomName).emit('joined', rooms[indexOfRoom].users)
-            if(rooms[indexOfRoom].messages){
-                io.to(roomName).emit('message', rooms[indexOfRoom].messages.reverse(), roomName)
-            }
     })
 
     socket.on('message', (message, roomName) => {
-        const sender = users.find(user => user.id === socket.id)
-        
-        const payload = {
-            message,
-            sender: sender.name,
-            date: new Date().toISOString()
-        }
-        const indexOfRoom = rooms.findIndex(room => room.roomName === roomName)
-        rooms[indexOfRoom].messages.push(payload)
+        const sender = ForaChat.getUserById(socket.id)
 
-        io.to(roomName).emit('message', rooms[indexOfRoom].messages.reverse(), roomName)
+        const newMessage = new Message(sender, message)
+        const currentRoom = ForaChat.getChatRoomByName(roomName)
+        console.log(ForaChat.getUsers())
+        currentRoom.addMessage(newMessage)
+
+        io.to(roomName).emit('message', currentRoom.getMessagesInRoom().reverse(), roomName)
     })
+
     socket.on('invite room', (inviterId, targetId, roomName) => {
         const user = users.find(user=>user.id == inviterId)
         io.to(targetId).emit('accept invite', roomName, user.name)
@@ -77,29 +72,26 @@ io.on('connection', socket => {
     })
     socket.on('leave', (roomName) => {
         socket.leave(roomName)
-        //users = users.filter(user => user.id !== socket.id)
-        //io.emit('new user', users)
+        const currentRoom = ForaChat.getChatRoomByName(roomName)
         
-        console.log(roomName)
-        const indexOfRoom = rooms.findIndex(room => room.roomName === roomName)
-        rooms[indexOfRoom].users = rooms[indexOfRoom].users.filter(user => user.id !== socket.id)
-        io.to(roomName).emit('joined', rooms[indexOfRoom].users)
+        currentRoom.deleteUserFromRoomById(socket.id)
+
+        io.to(roomName).emit('joined', currentRoom.getUsersInRoom())
     })
-
+    socket.on('disconnecting', ()=>{
+        
+    })
     socket.on('disconnect', ()=>{
-        socket.leave(currentSocketRoom)
-        users = users.filter(user => user.id !== socket.id)
-        io.emit('new user', users)
+    //    ForaChat.deleteUserFromMainChatById(socket.id)
+    //    const users = ForaChat.getUsers()
+    //    io.emit('new user', users)
+        
+        const updatedRooms = ForaChat.deleteUserFromAllRoomsById(socket.id)
 
-        //console.log(currentSocketRoom)
-
-        if(currentSocketRoom){
-            const indexOfRoom = rooms.findIndex(room => room.roomName === currentSocketRoom)
-            // console.log(indexOfRoom)
-            // console.log(rooms)
-            rooms[indexOfRoom].users = rooms[indexOfRoom].users.filter(user => user.id !== socket.id)
-            io.to(currentSocketRoom).emit('joined', rooms[indexOfRoom].users)
-        }
+        updatedRooms.forEach(room=>{
+            const users = room.getUsersInRoom()
+            io.to(room.roomName).emit('joined', users)
+        })
     })
 
     // WEBRTC

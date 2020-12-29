@@ -1,55 +1,44 @@
-import React from 'react'
-import { useRef } from 'react'
+import React, { useContext } from 'react'
 import { useState } from 'react'
 import JoinRoomPresent from './JoinRoom'
-
+import {JoinRoomContext} from '../App'
 
 export const Context = React.createContext()
 
-const JoinRoom = ({setName, setRoomName, roomName, name, setMoreRooms, rooms}) => {
+
+const JoinRoom = () => {
+    const {handleName,roomNameHandle,name,roomName,rooms,socketRef} = useContext(JoinRoomContext)
     //Обработчики модального окна и окна выбора чата
     const [openModal, setOpenModal] = useState(false)
     const [openDialog, setOpenDialog] = useState(false);
     
-    const [changeRoomInput, setChangeRoomInput] = useState(null)
+    const [newRoom, setNewRoomChange] = useState(null)
+
+    const handleNewRoom = (e)=>{
+        setNewRoomChange(e.target.value)
+    }
 
     const handleOpenDialog = () => {setOpenDialog(true)}
     const handleCloseDialog = (value) => {
         if(value) {
-            setRoomName(value)
+            roomNameHandle(value)
         }
-        setOpenDialog(false)
+        setOpenDialog(false)  
     }
     const handleOpenModal = () => {setOpenModal(true)}
     const handleCloseModal = () => {setOpenModal(false)}
 
-    const handleName = (value)=>{setName(value)}
-
-    const changeHandle = (e) => {
-        switch(e.target.name){
-            case 'roomInput':{
-                setChangeRoomInput(e.target.value)
-                break
-            }
-            case 'name':{
-                setName(e.target.value)
-                break
-            }
-            default:
-                break
-        }
-    }
     const handleCreateRoom = () => {
-        setRoomName(changeRoomInput)
-        setMoreRooms([...rooms, changeRoomInput])
+        socketRef.current.emit('new room', newRoom)
+        roomNameHandle(newRoom)
         setOpenModal(false)
-        setChangeRoomInput(null)
+        setNewRoomChange(null)
     }
 
     return <>
-        <Context.Provider value = {{openModal, handleOpenDialog, handleCloseDialog, handleOpenModal, handleCloseModal,
-             openDialog, rooms, changeRoomInput, changeHandle, handleCreateRoom, handleName, roomName}} >
-            <JoinRoomPresent changeHandle = {changeHandle} roomName = {roomName} name = {name}/>
+        <Context.Provider value = {{openModal, openDialog, handleOpenDialog, handleCloseDialog, handleOpenModal, handleCloseModal, handleNewRoom,
+              rooms, handleCreateRoom, handleName, name, roomName, newRoom, socketRef}} >
+            <JoinRoomPresent />
         </Context.Provider>
     </>
     

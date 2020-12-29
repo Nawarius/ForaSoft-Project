@@ -1,7 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Modal from '@material-ui/core/Modal';
-import Backdrop from '@material-ui/core/Backdrop';
 import Fade from '@material-ui/core/Fade';
 import {Context} from './JoinRoomContainer'
 import { useContext } from 'react';
@@ -23,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function TransitionsModal() {
   const classes = useStyles();
-  const {openModal,handleCloseModal,changeHandle, changeRoomInput, handleCreateRoom} = useContext(Context)
+  const {openModal,handleCloseModal, handleNewRoom, handleCreateRoom, newRoom} = useContext(Context)
 
   return (
     <div>
@@ -38,7 +37,7 @@ export default function TransitionsModal() {
         <Fade in={openModal}>
           <div className={classes.paper}>
             <Grid container direction = 'column'>
-              <TextField autoFocus label = 'Введите название чата' name = 'roomInput' value = {changeRoomInput} onChange = {changeHandle}></TextField>
+              <TextField autoFocus label = 'Введите название чата' name = 'roomInput' value = {newRoom} onChange = {handleNewRoom}></TextField>
               <Grid>
                 <Button onClick = {handleCreateRoom}>Создать</Button>
                 <Button onClick = {handleCloseModal}>Отменить</Button>

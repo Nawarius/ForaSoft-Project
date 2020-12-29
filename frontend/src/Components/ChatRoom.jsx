@@ -8,7 +8,6 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 const CharRoomContainer = ({roomName, handleUserMessage, users, changeHandle, callAccepted, receivedCall, caller, acceptCall, handleLeave,
     handleOpenInvite , allMessages, socketRef, userVideoRef, partnerVideofRef, stream, callUser, callGoing}) => {
 
-    
     const allUsers = users.map(item => {
         return <Grid container>
                     <PersonIcon />
@@ -28,7 +27,7 @@ const CharRoomContainer = ({roomName, handleUserMessage, users, changeHandle, ca
     const messages = allMessages.map(item => {
         return <Grid container direction = 'column' alignItems = 'left' >
                 <Typography>{item.date}</Typography>
-                <Typography>{item.sender}:</Typography>
+                <Typography>{item.sender.name}:</Typography>
                 <Typography>{item.message}</Typography>
             </Grid>
     })

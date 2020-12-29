@@ -39,16 +39,13 @@ const CharRoomContainer = ({name, roomName, socketRef, setRoomName, myRoomsHandl
         if (device.kind === 'videoinput') hasVideo = true
     })
   }
-
-  async function shareDevices(){
-    getConnectedDevices().then(()=>{
-      navigator.mediaDevices.getUserMedia({ audio:hasAudio, video:hasVideo }).then(stream => {
-        setStream(stream);
+    function getMedia(){
+      navigator.mediaDevices.getUserMedia({ audio:true, video:true }).then(stream => {
+        setStream(stream)
         if (userVideoRef.current) {
           userVideoRef.current.srcObject = stream;
         }
       })
-    })
   }
 
     useEffect(()=>{
@@ -57,7 +54,7 @@ const CharRoomContainer = ({name, roomName, socketRef, setRoomName, myRoomsHandl
         if(!roomExist) myRoomsHandle(roomName)
 
         setRedirect(false)
-        shareDevices()
+        getMedia()
 
         socketRef.current.emit('join server', name)
     
@@ -70,11 +67,13 @@ const CharRoomContainer = ({name, roomName, socketRef, setRoomName, myRoomsHandl
         })
 
         socketRef.current.on('message', (payload, roomN) => {
-            if(roomN == roomName){
+            if(roomN === roomName){
                 setAllMessages(payload)
             }
         })
-        
+        socketRef.current.on('disc', id => {
+            console.log(id)
+        })
         socketRef.current.on('joined', users => {
             setUsersInRoom(users)
         })

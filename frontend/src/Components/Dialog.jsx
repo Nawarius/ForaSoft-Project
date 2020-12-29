@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import AddModal from './AddModal'
 import { makeStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
@@ -25,23 +25,22 @@ const useStyles = makeStyles({
 });
 
 function SimpleDialog() {
-  const {handleCloseDialog, handleOpenModal,openDialog, rooms} = useContext(Context)
+  const {handleCloseDialog, handleOpenModal, openDialog, rooms} = useContext(Context)
 
   const classes = useStyles();
-
 
   return (
     <Dialog onClose={()=>{handleCloseDialog(null)}} open={openDialog}>
       <DialogTitle >Выберите комнату</DialogTitle>
       <List>
-        {rooms.map((room) => (
-          <ListItem button onClick={() => handleCloseDialog(room)} key={room}>
+        {rooms.map((room,index) => (
+          <ListItem button onClick={() => handleCloseDialog(room.roomName)} key={index}>
             <ListItemAvatar>
               <Avatar className={classes.avatar}>
                 <PeopleIcon />
               </Avatar>
             </ListItemAvatar>
-            <ListItemText primary={room} />
+            <ListItemText primary={room.roomName} />
           </ListItem>
         ))}
         <ListItem button onClick={handleOpenModal}>
